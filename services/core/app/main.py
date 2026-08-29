@@ -12,7 +12,7 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(
-    title="Ultra Core API",
+    title="Template Core API",
     lifespan=lifespan,
     docs_url=None if settings.is_prod else "/docs",
 )

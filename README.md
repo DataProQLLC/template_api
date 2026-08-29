@@ -1,1 +1,1 @@
-# FastAPI + Supabase App for the Ultra Mobile Application
+# FastAPI + Supabase App for a Template Mobile Application

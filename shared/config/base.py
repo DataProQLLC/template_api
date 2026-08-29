@@ -1,4 +1,4 @@
-# shared/ultra_shared/config/base.py
+# shared/config/base.py
 from typing import Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 

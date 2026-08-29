@@ -1,4 +1,4 @@
-# shared/ultra_shared/errors/handlers.py
+# shared/errors/handlers.py
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from .exceptions import AppError

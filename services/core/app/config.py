@@ -16,9 +16,5 @@ class Settings(BaseAppSettings):
     supabase_url: str
     supabase_secret_key: str
     supabase_publishable_key: str
-    # plaid_client_id: str
-    # plaid_secret: str
-    # plaid_env: str = "sandbox"
-    # starting_balance_cents: int = 100_000
 
 settings = Settings()

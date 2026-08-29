@@ -1,4 +1,4 @@
-# shared/ultra_shared/errors/exceptions.py
+# shared/errors/exceptions.py
 class AppError(Exception):
     status_code = 400
     code = "app_error"

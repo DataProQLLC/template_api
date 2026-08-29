@@ -1,4 +1,4 @@
-# shared/ultra_shared/auth/jwks.py
+# shared/auth/jwks.py
 import asyncio, time
 import httpx, jwt
 from jwt.algorithms import ECAlgorithm, RSAAlgorithm

@@ -1,4 +1,4 @@
-# ULTRAAPI/.dockerignore
+# /.dockerignore
 secrets/
 .env
 .env.*

@@ -1,4 +1,4 @@
-# shared/ultra_shared/auth/deps.py
+# shared/auth/deps.py
 from dataclasses import dataclass
 from typing import Optional
 import jwt

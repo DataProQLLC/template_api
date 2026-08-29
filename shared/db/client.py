@@ -1,4 +1,4 @@
-# shared/ultra_shared/db/client.py
+# shared/db/client.py
 from enum import Enum
 from functools import lru_cache
 from typing import Any
