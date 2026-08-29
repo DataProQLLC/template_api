@@ -1,0 +1,9 @@
+# shared/pyproject.toml
+[project]
+name = "shared"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["pydantic-settings", "pyjwt[crypto]", "httpx", "fastapi"]
+
+[tool.setuptools.packages.find]
+include = ["ultra_shared*"]

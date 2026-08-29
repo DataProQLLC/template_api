@@ -1,0 +1,11 @@
+-e ./shared
+fastapi
+uvicorn[standard]
+pydantic-settings
+pyjwt[crypto]
+httpx
+supabase
+pytest
+pytest-asyncio
+pydantic[email]
+plaid-python
