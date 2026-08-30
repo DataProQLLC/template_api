@@ -6,6 +6,8 @@ from app.config import settings
 from app.api.deps import jwks
 from app.api.v1 import router as v1
 
+_hide = settings.is_prod
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await jwks.warm()
@@ -14,7 +16,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Template Core API",
     lifespan=lifespan,
-    docs_url=None if settings.is_prod else "/docs",
+    docs_url=None if _hide else "/docs",
+    redoc_url=None if _hide else "/redoc",
+    openapi_url=None if _hide else "/openapi.json",
 )
 register_error_handlers(app)
 app.include_router(v1, prefix="/v1")

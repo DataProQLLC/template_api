@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 import httpx
 from shared.db.client import DBClient, Role
 from shared.errors.exceptions import AppError, AuthError, ConflictError
-from app.repositories import users as repo
 
 def _session(data: dict) -> dict:
     user = data.get("user") or {}

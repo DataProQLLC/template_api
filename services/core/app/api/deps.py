@@ -2,7 +2,6 @@
 from typing import Annotated, Optional
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials
-from supabase import Client
 from shared.auth.jwks import JWKSCache
 from shared.auth.deps import bearer, make_auth_deps, CurrentUser
 from shared.db.client import DBClient, get_db

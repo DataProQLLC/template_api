@@ -1,8 +1,8 @@
 # services/core_api/app/api/v1/routes/users.py
-from fastapi import APIRouter, status
+from fastapi import APIRouter
 from shared.db.client import Role
 from app.api.deps import CurrentUserDep, Db
-from app.api.v1.schemas.users import SignupIn, SignupOut, SessionOut, SigninIn, RefreshIn
+from app.api.v1.schemas.users import SignupIn, SessionOut, SigninIn, RefreshIn
 from app.services import users as service
 
 router = APIRouter()
@@ -22,7 +22,3 @@ def refresh(payload: RefreshIn, db: Db):
 @router.get("/me")
 def me(user: CurrentUserDep, db: Db):
     return service.get_me(db, role=Role.USER, access_token=user.access_token)
-
-@router.get("/all")
-def me(user: CurrentUserDep, db: Db):
-    return service.get_me(db, role=Role.ADMIN, access_token=user.access_token)
