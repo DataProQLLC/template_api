@@ -3,11 +3,11 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
 from app.config import settings
 
-_dev = settings.env == "dev"
+_prod = settings.env == "prod"
 
 def _ex(*values):
     """Dev-only OpenAPI examples. Returns None in stage/prod."""
-    return {"examples": list(values)} if _dev else None
+    return {"examples": list(values)} if not _prod else None
 
 class SignupIn(BaseModel):
     email: EmailStr = Field(json_schema_extra=_ex("jwmatthews1126@gmail.com"))

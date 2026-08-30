@@ -1,30 +1,45 @@
-# shared/db/client.py
 from enum import Enum
-from functools import lru_cache
 from typing import Any
+
 import httpx
 
+
 class Role(str, Enum):
+    """Which credential the request runs under.
+
+    USER  -> publishable key + the caller's JWT. RLS applies. Default for
+             anything acting on behalf of a signed-in user.
+    ADMIN -> secret key. RLS is BYPASSED. Only for trusted server-side work
+             (webhooks, cron, admin tools). Never reachable from a plain
+             authenticated route without an explicit authorization check.
+    """
+
     USER = "user"
     ADMIN = "admin"
 
-@lru_cache
-def _pool() -> httpx.Client:
-    """One connection pool for the process. No per-request state."""
-    return httpx.Client(
-        timeout=httpx.Timeout(10.0, connect=3.0),
-        limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
-    )
 
 class DBClient:
-    """Thin PostgREST wrapper. Auth is per-call, so instances are safe to share."""
+    """Thin async PostgREST wrapper.
 
-    def __init__(self, url: str, publishable_key: str, secret_key: str):
+    The httpx.AsyncClient is injected rather than created here: an AsyncClient
+    binds to the event loop it is created on, so it must be built inside the
+    app lifespan and closed on shutdown. Injecting it also makes this class
+    trivial to fake in tests.
+    """
+
+    def __init__(
+        self,
+        url: str,
+        publishable_key: str,
+        secret_key: str,
+        http: httpx.AsyncClient,
+    ):
         base = url.rstrip("/")
         self._base = f"{base}/rest/v1"
         self._auth_base = f"{base}/auth/v1"
         self._publishable = publishable_key
         self._secret = secret_key
+        self._http = http
 
     def _headers(self, role: Role, access_token: str | None) -> dict[str, str]:
         if role is Role.ADMIN:
@@ -38,7 +53,7 @@ class DBClient:
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
         }
-    
+
     def _auth_headers(self, access_token: str | None = None) -> dict[str, str]:
         return {
             "apikey": self._publishable,
@@ -46,10 +61,14 @@ class DBClient:
             "Content-Type": "application/json",
         }
 
-    def auth_post(self, path: str, body: dict,
-                  params: dict | None = None,
-                  access_token: str | None = None) -> dict:
-        r = _pool().post(
+    async def auth_post(
+        self,
+        path: str,
+        body: dict,
+        params: dict | None = None,
+        access_token: str | None = None,
+    ) -> dict:
+        r = await self._http.post(
             f"{self._auth_base}/{path.lstrip('/')}",
             json=body,
             params=params,
@@ -58,15 +77,15 @@ class DBClient:
         r.raise_for_status()
         return r.json()
 
-    def rpc(
+    async def rpc(
         self,
         fn: str,
         params: dict[str, Any] | None = None,
         *,
-        role: Role = Role.ADMIN,
+        role: Role = Role.USER,
         access_token: str | None = None,
     ) -> Any:
-        r = _pool().post(
+        r = await self._http.post(
             f"{self._base}/rpc/{fn}",
             json=params or {},
             headers=self._headers(role, access_token),
@@ -74,15 +93,15 @@ class DBClient:
         r.raise_for_status()
         return r.json()
 
-    def select(
+    async def select(
         self,
         table: str,
         *,
         params: dict[str, str] | None = None,
-        role: Role = Role.ADMIN,
+        role: Role = Role.USER,
         access_token: str | None = None,
     ) -> list[dict]:
-        r = _pool().get(
+        r = await self._http.get(
             f"{self._base}/{table}",
             params=params or {},
             headers=self._headers(role, access_token),
@@ -90,12 +109,12 @@ class DBClient:
         r.raise_for_status()
         return r.json()
 
-    def insert(
+    async def insert(
         self,
         table: str,
         rows: dict | list[dict],
         *,
-        role: Role = Role.ADMIN,
+        role: Role = Role.USER,
         access_token: str | None = None,
         upsert_on: str | None = None,
     ) -> list[dict]:
@@ -103,7 +122,7 @@ class DBClient:
         headers["Prefer"] = "return=representation"
         if upsert_on:
             headers["Prefer"] += ",resolution=merge-duplicates"
-        r = _pool().post(
+        r = await self._http.post(
             f"{self._base}/{table}",
             json=rows,
             params={"on_conflict": upsert_on} if upsert_on else None,
@@ -111,7 +130,3 @@ class DBClient:
         )
         r.raise_for_status()
         return r.json()
-
-@lru_cache
-def get_db(url: str, publishable_key: str, secret_key: str) -> DBClient:
-    return DBClient(url, publishable_key, secret_key)

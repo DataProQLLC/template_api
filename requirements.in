@@ -1,7 +1,9 @@
 # to generate: uv pip compile requirements.in -o requirements.txt --generate-hashes
+# install: pip install -r requirements.txt
 
 # to upgrade: uv pip compile requirements.in -o requirements.txt --generate-hashes --upgrade
 # git diff requirements.txt
+# if diffs look good install: pip install -r requirements.txt
 
 fastapi>=0.115,<1.0
 uvicorn[standard]>=0.30

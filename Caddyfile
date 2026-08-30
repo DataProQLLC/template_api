@@ -1,0 +1,21 @@
+# Local reverse proxy so dev uses the same URL shape as Cloud Run.
+#   brew install caddy
+#   make hosts
+#   make proxy        (first run prompts for sudo to trust the local CA)
+#   make core
+#
+# No path rewriting: /v1/... goes through untouched, so FastAPI needs no
+# root_path and /docs keeps working.
+
+api.local.template.com {
+	tls internal
+	reverse_proxy 127.0.0.1:8080
+}
+
+# A second deployable later, same hostname, different path prefix --
+# exactly what an Application Load Balancer does in front of Cloud Run.
+# api.local.template.com {
+# 	tls internal
+# 	handle /v1/ingest/* { reverse_proxy 127.0.0.1:8081 }
+# 	handle              { reverse_proxy 127.0.0.1:8080 }
+# }
