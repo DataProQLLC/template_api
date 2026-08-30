@@ -4,6 +4,8 @@ import httpx
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
+from shared.api.middleware import RequestContextMiddleware
+from shared.api.status import make_status_router
 from shared.db.client import DBClient
 from shared.docs.swagger import swagger_ui_with_versions
 from shared.errors.handlers import register_error_handlers
@@ -16,14 +18,15 @@ _hide = settings.is_prod
 
 # Single source of truth for versions. Order matters: last entry is "latest".
 # Adding v3 = one line here + an app/api/v3 package. Retiring v1 = delete a line.
-VERSIONS: list[tuple[str, object, str]] = [
-    ("v1", v1_router, "Maintenance only. New clients should use the latest version."),
-    ("v2", v2_router, "Current version."),
+# name, router, description, deprecated, sunset (ISO date or None)
+VERSIONS: list[tuple[str, object, str, bool, str | None]] = [
+    ("v1", v1_router, "Maintenance only. New clients should use the latest version.", True, None),
+    ("v2", v2_router, "Current version.", False, None),
 ]
 # VERSIONS: list[tuple[str, object, str]] = [
 #     ("v1", v1_router, "Current version."),
 # ]
-VERSION_NAMES = [name for name, _, _ in VERSIONS]
+VERSION_NAMES = [v[0] for v in VERSIONS]
 LATEST = VERSION_NAMES[-1]
 
 
@@ -58,10 +61,11 @@ app = FastAPI(
     redoc_url=None,
     openapi_url=None,
 )
+app.add_middleware(RequestContextMiddleware)
 register_error_handlers(app)
 
 _version_apps: list[FastAPI] = []
-for _name, _router, _note in VERSIONS:
+for _name, _router, _note, _deprecated, _sunset in VERSIONS:
     _sub = FastAPI(
         title=f"{settings.app_name} core API",
         description=_note,
@@ -78,6 +82,19 @@ for _name, _router, _note in VERSIONS:
         root_path_in_servers=False,
     )
     _sub.include_router(_router)
+    # Per-version status: shows deprecation state and runtime capacity, and
+    # appears on this version's docs page (unlike the unversioned /health).
+    _sub.include_router(
+        make_status_router(
+            version=_name,
+            latest=LATEST,
+            versions=VERSION_NAMES,
+            env=settings.env,
+            deprecated=_deprecated,
+            sunset=_sunset,
+        )
+    )
+    _sub.add_middleware(RequestContextMiddleware)
     register_error_handlers(_sub)
     app.mount(f"/{_name}", _sub)
     _version_apps.append(_sub)
@@ -85,7 +102,10 @@ for _name, _router, _note in VERSIONS:
 
 @app.get("/health")
 async def health():
-    """Unversioned on purpose -- this contract must never break."""
+    """Liveness probe for Cloud Run. Unversioned on purpose -- this contract
+    must never break, and it deliberately checks NO dependencies: if it
+    tested the database, a slow DB would cause the platform to kill healthy
+    instances. Version-specific detail lives at /{version}/status."""
     return {
         "ok": True,
         "env": settings.env,

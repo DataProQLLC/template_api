@@ -1,14 +1,23 @@
 # Secrets
-secrets/
-!secrets/*.example
+# NOTE: ignore the CONTENTS of secrets/, not the directory. A trailing slash
+# ("secrets/") excludes the directory itself, and git never descends into an
+# excluded directory -- so a later "!secrets/*.example" can never re-include
+# anything inside it.
+secrets/*
 .env
 .env.*
-!.env.example
 *.pem
 *.key
 *.p12
 credentials.json
 service-account*.json
+
+# Re-include example templates. These MUST come after the patterns above:
+# the last matching pattern wins, and ".env.*" above would otherwise swallow
+# secrets/.env.core.example.
+!secrets/*.example
+!.env.example
+!.env.*.example
 
 # Python
 __pycache__/

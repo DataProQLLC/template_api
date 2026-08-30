@@ -1,4 +1,8 @@
 # /.dockerignore
+# Everything under secrets/ stays OUT of the build context, including the
+# .example template. Nothing in here is useful inside the image, and keeping
+# the whole directory out means a stray real secret can never be baked in.
+# Config reaches the container via --set-env-vars / --set-secrets at deploy.
 secrets/
 .env
 .env.*
