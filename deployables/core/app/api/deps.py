@@ -10,8 +10,8 @@ from app.config import settings
 
 # Holds only a URL and a dict at import time; the HTTP client is attached
 # during lifespan startup.
-jwks = JWKSCache(f"{settings.supabase_url}/auth/v1/.well-known/jwks.json")
-_current_user = make_auth_deps(jwks, settings.supabase_url)
+jwks = JWKSCache(f"{settings.db_url}/auth/v1/.well-known/jwks.json")
+_current_user = make_auth_deps(jwks, settings.db_url)
 
 
 async def current_user(

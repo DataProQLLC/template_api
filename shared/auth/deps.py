@@ -19,7 +19,7 @@ def unauthorized(detail: str) -> HTTPException:
     return HTTPException(status.HTTP_401_UNAUTHORIZED, detail,
                          headers={"WWW-Authenticate": "Bearer"})
 
-def make_auth_deps(jwks, supabase_url: str):
+def make_auth_deps(jwks, db_url: str):
     """Factory so each service binds its own JWKS cache and issuer."""
 
     async def decode(token: str) -> dict:
@@ -36,7 +36,7 @@ def make_auth_deps(jwks, supabase_url: str):
             return jwt.decode(
                 token, key=key, algorithms=ALGORITHMS,
                 audience="authenticated",
-                issuer=f"{supabase_url}/auth/v1",
+                issuer=f"{db_url}/auth/v1",
                 options={"require": ["exp", "sub", "aud"]},
             )
         except jwt.ExpiredSignatureError:
