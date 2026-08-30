@@ -34,9 +34,9 @@ async def lifespan(app: FastAPI):
         limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
     ) as http:
         db = DBClient(
-            settings.supabase_url,
-            settings.supabase_publishable_key,
-            settings.supabase_secret_key,
+            settings.db_url,
+            settings.db_publishable_key,
+            settings.db_secret_key,
             http=http,
         )
         # Inside a mounted sub-app request.app is the SUB-app, so shared

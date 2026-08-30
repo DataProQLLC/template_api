@@ -14,8 +14,8 @@ _env_file = next(
 class Settings(BaseAppSettings):
     model_config = SettingsConfigDict(env_file=_env_file, extra="ignore")
 
-    supabase_url: str
-    supabase_secret_key: str
-    supabase_publishable_key: str
+    db_url: str
+    db_secret_key: str
+    db_publishable_key: str
 
 settings = Settings()
